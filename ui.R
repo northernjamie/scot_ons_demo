@@ -47,19 +47,41 @@ navbarPage("ONS Paygap Demo", id="nav",
                         leafletOutput("map", width="100%", height="100%"),
                         
                         # Shiny versions prior to 0.11 should use class="modal" instead.
-                        absolutePanel(id = "controls", class = "panel panel-default", fixed = TRUE,
+                        absolutePanel(id = "controls",style = " height: 100vh; overflow-y: auto; ", class = "panel panel-default", fixed = TRUE,
                                       draggable = TRUE, top = 60, left = "auto", right = 20, bottom = "auto",
                                       width = 450, height = "auto",
                                       
                                       h2("Paygap Data"),
+                                      selectInput("map","Show map:",
+                                                  c("Median Male Pay (ONS)" = "mapmpay",
+                                                    "Median Female Pay (ONS)" = "mapfpay",
+                                                    "Pay Gap (ONS)" = "mapgap",
+                                                    "Breastfeeding (ScotGov)" = "mapbf",
+                                                    "Deliberate Fires (ScotGov)" = "mapfire",
+                                                    "Jobseekers (ScotGov)" = "mapjsa",
+                                                    "Dwellings per Hectare (ScotGov)" = "mapdwell",
+                                                    "Alcohol-related Discharge (ScotGov)" = "mapalc"
+                                                                 )),
+                                      selectInput("filter","Filter by:",
+                                                  c("Median Male Pay (ONS)" = "filtermpay",
+                                                    "Median Female Pay (ONS)" = "filterfpay",
+                                                    "Pay Gap (ONS)" = "filtergap",
+                                                    "Breastfeeding (ScotGov)" = "filterbf",
+                                                    "Deliberate Fires (ScotGov)" = "filterfire",
+                                                    "Jobseekers (ScotGov)" = "filterjsa",
+                                                    "Dwellings per Hectare (ScotGov)" = "filterdwell",
+                                                    "Alcohol-related Discharge (ScotGov)" = "filteralc"
+                                                  )),
                                       h5("Filter constituencies by the gap between male and female median pay"),
                                       #sliderInput("paygaprange", "Choose the range of values you would like to display", min = -5000, max = 20000, value = c(-5000,20000)),
                                       numericInput("lower", "Paygap between", value= -5000),
                                       numericInput("upper", "and", value=20000),
-                                      fluidRow(
-                                        column(6,plotOutput("plot1"))#,
-                                        #column(6,plotOutput("plot2"))
-                                      )
+                                      plotOutput("plot1")
+                                      #parking this for now - arranging two chart elements side-by-side
+                                      #fluidRow(
+                                      #  column(6,plotOutput("plot1"))#,
+                                      #  column(6,plotOutput("plot2"))
+                                      #)
                                       
                                       
                                       
@@ -73,11 +95,11 @@ navbarPage("ONS Paygap Demo", id="nav",
                                       
                                       #plotOutput("histCentile", height = 200),
                                       #plotOutput("scatterCollegeIncome", height = 250)
-                        ),
-                        
-                        tags$div(id="cite",
-                                 'Data compiled for ', tags$em('Coming Apart: The Fucking Absolute State of the UK, 2017'), ' by Jamie Whyte (Crown Forum, 2012).'
                         )
+                        
+                        #tags$div(id="cite",
+                        #         'Data compiled for ', tags$em('Coming Apart: The Fucking Absolute State of the UK, 2017'), ' by Jamie Whyte (Crown Forum, 2012).'
+                        #)
                     )
            ),
            

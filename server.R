@@ -102,36 +102,48 @@ scotcouncil <- readOGR("ScottishCouncilAreas2_simplified.geojson", "OGRGeoJSON")
 # Load the csv file containing the pay data
 pgdata <- read.csv2("ons_ashe_scot_paygap.csv",header = TRUE, sep=",")
 
+#Load the csv file containing the scottish government data
+sgdata <- read.csv2("scot_stat_data.csv",header = TRUE, sep=",")
+
 #Turn the value column into from scientific notation to number
 pgdata <- transform(pgdata, value = as.numeric(value))
+sgdata <- transform(sgdata, value = as.numeric(value))
 
+#Turn into dataframes
 pgdata <- as.data.frame(pgdata)
+sgdata <- as.data.frame(sgdata)
+
+#Pick out only the median statistic from the paygap data (ie discarding distribution)
 pgdata2 <- pgdata[ which(pgdata$statname == "Median"), ]
-#pgdata <- subset(pgdata, year == "2016" & stat == "Median")
+
+#Pivot the data row headers to the left of the tilde, column headers to the right, then value
 pgdata2 <- dcast(pgdata2,areaname + areacode ~ sexname, value.var = 'value')
+
+sgdata2 <- dcast(sgdata,areaname + areacode ~ indicatorlabel, value.var = 'value')
+
+#Add a calculated field for the paygap between males and females
 pgdata2$gap <- with(pgdata2,Male - Female)
 
 #pgdist <- pgdata[ which(pgdata$year == "2016"), ]
 
+#Pivot the distribution of pay across the deciles. Think this will not be needed for this particular report
 pgdist2 <- dcast(pgdata,areaname + areacode + statname ~ sexname, value.var = 'value')
 
+#Again, add the calculated field to this dataframe
 pgdist2$gap <- with(pgdist2, Male - Female)
 
 #Pluck the national figure out of the data
 pgdist2Nat <- pgdist2[ which(pgdist2$areacode == "K03000001"),]
 
-
+#Merge the two dataframes into one, horizontally
+combdata <- merge(pgdata2,sgdata2,by="areacode")
 
 server <- (function(input, output, session) {
   
-  # This bit is the bit that responds to the slider on the UI
-  #selected <- reactive({
-  # subset(smokpreg,
-  #        percsmoking < input$smokerange[2] & percsmoking >= input$smokerange[1])
-  #})
-  
+  #Filter the data according to the values entered into the filter text boxes
+  #***Need to change this so that instead of it always filtering gap, it filters using the field selected in the filter dropdown
   selected <- reactive({
-    subset(pgdata2,
+    subset(combdata,
            gap < input$upper & gap >= input$lower)
   })
   
@@ -144,7 +156,6 @@ server <- (function(input, output, session) {
   output$map <- renderLeaflet({
     
     leaflet() %>% 
-      #maybe set a more colourful map background..?
       addProviderTiles("Esri.WorldStreetMap") %>% 
       setView(lat = lat, lng = lng, zoom = zoom) %>%
       addPolygons(data = scotcouncil, opacity=1, color = "black", weight = 1, fillOpacity=0.5, layerId = scotcouncil$CODE)
@@ -162,12 +173,15 @@ server <- (function(input, output, session) {
     scotcouncil@data <- left_join(scotcouncil@data, selected(), by=c("CODE"="areacode"))
     
     #sets the colour range to be used on the choropleth
+    #***Needs to change based on what's selected in the map dropdown
     qpal <- colorNumeric("Spectral", pgdata2$gap, na.color = "#bdbdbd")
     
     #the popup on the map
+    #***Need to make this dynamic based on what's selected in the map dropdown
     popup <- paste0("<h5>",scotcouncil$NAME,"</h5><br /><h3>£",scotcouncil$gap,"</h3>")
     
     #draw the map with stuff on
+    #***Need to make this dynamic based on what's selected in the map dropdown
     leafletProxy("map", data = scotcouncil) %>%
       addProviderTiles("Esri.WorldStreetMap") %>% 
       clearShapes() %>% 
@@ -175,7 +189,7 @@ server <- (function(input, output, session) {
       addPolygons(data = scotcouncil, fillColor = ~qpal(gap), fillOpacity = 0.7, 
                 color = "#bdbdbd", weight = 1, popup = popup, layerId = scotcouncil$CODE) %>%
       addLegend(pal = qpal, values = ~gap, opacity = 0.7,
-                position = 'bottomleft', 
+                position = 'bottomleft',
                 title = paste0("The Pay Gap"))
   })
   
@@ -189,19 +203,24 @@ server <- (function(input, output, session) {
     if(is.null(click))
       return()
    
-    available <- pgdata2[ which(pgdata2$areacode == click$id), ]
+    available <- combdata[ which(combdata$areacode == click$id), ]
     
-    text2 <- paste0("Constituency: ", available[1,1], " (", available[1,2],")")
+    text2 <- paste0("Council area: ", available[1,1], " (", available[1,2],")")
     
-    #text2<-paste("You've selected shape: ", click$id)
     output$const_name<-renderText({
       text2
     })
     
-    pgdist2Const <- pgdist2[ which(pgdist2$areacode == available[1,2]),]
+    #Probably get rid of this for this demo and use scatterplot / plain barplot
+    #pgdist2Const <- pgdist2[ which(pgdist2$areacode == available[1,2]),]
+    #output$plot1 <- renderPlot({
+    #  ggplot() + geom_bar(data = pgdist2Const, aes(x=statname,y=All), stat="identity") + geom_point(data = pgdist2Nat, aes(x=statname,y=All), stat="identity")
+    #})
+    #scatterplot
     output$plot1 <- renderPlot({
-      ggplot() + geom_bar(data = pgdist2Const, aes(x=statname,y=All), stat="identity") + geom_point(data = pgdist2Nat, aes(x=statname,y=All), stat="identity")
+      ggplot(combdata, aes(x=All, y=Breastfeeding,label=areaname.x)) + geom_point(shape=21, size=6, color="blue",fill="red", alpha=0.3) + stat_smooth(method = "lm", col = "red") + ggtitle('Test Scatterplot') + labs(x='Median Pay', y='Breastfeeding Rates') + theme_bw() 
     })
+    
     
     
   })
