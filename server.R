@@ -96,6 +96,8 @@ skos:notation ?areacode
 # SPARQL is too big to run succesfully
 #qd <- SPARQL(endpoint,query)
 
+legendtitle <- "Median Pay Male"
+
 # Load the constituency geography file
 scotcouncil <- readOGR("ScottishCouncilAreas2_simplified.geojson", "OGRGeoJSON")
 
@@ -106,8 +108,8 @@ pgdata <- read.csv2("ons_ashe_scot_paygap.csv",header = TRUE, sep=",")
 sgdata <- read.csv2("scot_stat_data.csv",header = TRUE, sep=",")
 
 #Turn the value column into from scientific notation to number
-pgdata <- transform(pgdata, value = as.numeric(value))
-sgdata <- transform(sgdata, value = as.numeric(value))
+#pgdata <- transform(pgdata, value = as.numeric(value))
+sgdata <- transform(sgdata, value = as.numeric(as.character(value)))
 
 #Turn into dataframes
 pgdata <- as.data.frame(pgdata)
@@ -158,7 +160,7 @@ server <- (function(input, output, session) {
     leaflet() %>% 
       addProviderTiles("Esri.WorldStreetMap") %>% 
       setView(lat = lat, lng = lng, zoom = zoom) %>%
-      addPolygons(data = scotcouncil, opacity=1, color = "black", weight = 1, fillOpacity=0.5, layerId = scotcouncil$CODE)
+      addPolygons(data = scotcouncil, opacity=1, color = "black", weight = 1, fillOpacity=0.8, layerId = scotcouncil$CODE)
     
   })
   
@@ -169,16 +171,63 @@ server <- (function(input, output, session) {
   #
   observe({
     
+    
+    
     #merge the data from the csv / sparql with the geojson data for mapping
     scotcouncil@data <- left_join(scotcouncil@data, selected(), by=c("CODE"="areacode"))
     
+    #test changing the map based on the dropdown
+    if(input$map == 'mapmpay') {
+      legendtitle <- 'Median Male Pay';
+      dynamicValue <- scotcouncil$Male;
+      prefix <- '£';
+      suffix <- ''
+    } else if(input$map == 'mapfpay'){
+      legendtitle <- 'Median Female Pay';
+      dynamicValue <- scotcouncil$Female
+    } else if(input$map == 'mapapay'){
+      legendtitle <- 'Median Pay';
+      dynamicValue <- scotcouncil$All;
+      prefix <- '£';
+      suffix <- ''
+    } else if(input$map == 'mapgap'){
+      legendtitle <- 'Pay Gap';
+      dynamicValue <- scotcouncil$gap;
+      prefix <- '£';
+      suffix <- ''
+    } else if(input$map == 'mapbf'){
+      legendtitle <- 'Breastfeeding Rate';
+      dynamicValue <- scotcouncil$Breastfeeding;
+      prefix <- '';
+      suffix <- '%'
+    } else if(input$map == 'mapfire'){
+      legendtitle <- 'Deliberate Fires';
+      dynamicValue <- scotcouncil$`Deliberate fires`;
+      prefix <- '';
+      suffix <- ''
+    } else if(input$map == 'mapjsa'){
+      legendtitle <- 'JSA Claimants';
+      dynamicValue <- scotcouncil$`Job Seeker's Allowance Claimants`;
+      prefix <- '';
+      suffix <- '%'
+    } else if(input$map == 'mapdwell'){
+      legendtitle <- 'Dwellings per Hectare';
+      dynamicValue <- scotcouncil$`Dwellings per Hectare`;
+      prefix <- '';
+      suffix <- ' dwellings per hectare'
+    } else if(input$map == 'mapalc'){
+      legendtitle <- 'Alcohol-related Discharge';
+      dynamicValue <- scotcouncil$`Alcohol Related Hospital Discharge`;
+      prefix <- '';
+      suffix <- ''
+    }
+    
     #sets the colour range to be used on the choropleth
-    #***Needs to change based on what's selected in the map dropdown
-    qpal <- colorNumeric("Spectral", pgdata2$gap, na.color = "#bdbdbd")
+    qpal <- colorNumeric("Spectral", dynamicValue, na.color = "#bdbdbd")
     
     #the popup on the map
-    #***Need to make this dynamic based on what's selected in the map dropdown
-    popup <- paste0("<h5>",scotcouncil$NAME,"</h5><br /><h3>£",scotcouncil$gap,"</h3>")
+    
+    popup <- paste0("<h5>",scotcouncil$NAME,"</h5><br /><h3>",prefix,dynamicValue,suffix,"</h3>")
     
     #draw the map with stuff on
     #***Need to make this dynamic based on what's selected in the map dropdown
@@ -186,11 +235,11 @@ server <- (function(input, output, session) {
       addProviderTiles("Esri.WorldStreetMap") %>% 
       clearShapes() %>% 
       clearControls() %>% 
-      addPolygons(data = scotcouncil, fillColor = ~qpal(gap), fillOpacity = 0.7, 
+      addPolygons(data = scotcouncil, fillColor = ~qpal(dynamicValue), fillOpacity = 0.8, 
                 color = "#bdbdbd", weight = 1, popup = popup, layerId = scotcouncil$CODE) %>%
-      addLegend(pal = qpal, values = ~gap, opacity = 0.7,
+      addLegend(pal = qpal, values = ~dynamicValue, opacity = 0.7,
                 position = 'bottomleft',
-                title = paste0("The Pay Gap"))
+                title = paste0(legendtitle))
   })
   
   observe({

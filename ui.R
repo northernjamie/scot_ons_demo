@@ -33,7 +33,7 @@ library(shiny) ; library(dplyr) ; library(rgdal) ; library(leaflet) ; library(ra
 #   
 # ))
 
-navbarPage("ONS Paygap Demo", id="nav",
+navbarPage("ONS Linked Data", id="nav",
            
            tabPanel("MAP",
                     div(class="outer",
@@ -51,9 +51,10 @@ navbarPage("ONS Paygap Demo", id="nav",
                                       draggable = TRUE, top = 60, left = "auto", right = 20, bottom = "auto",
                                       width = 450, height = "auto",
                                       
-                                      h2("Paygap Data"),
+                                      h2("Choose Data"),
                                       selectInput("map","Show map:",
-                                                  c("Median Male Pay (ONS)" = "mapmpay",
+                                                  c("Median Pay (ONS)" = "mapapay",
+                                                    "Median Male Pay (ONS)" = "mapmpay",
                                                     "Median Female Pay (ONS)" = "mapfpay",
                                                     "Pay Gap (ONS)" = "mapgap",
                                                     "Breastfeeding (ScotGov)" = "mapbf",
@@ -63,7 +64,8 @@ navbarPage("ONS Paygap Demo", id="nav",
                                                     "Alcohol-related Discharge (ScotGov)" = "mapalc"
                                                                  )),
                                       selectInput("filter","Filter by:",
-                                                  c("Median Male Pay (ONS)" = "filtermpay",
+                                                  c("Median Pay (ONS)" = "filterapay",
+                                                    "Median Male Pay (ONS)" = "filtermpay",
                                                     "Median Female Pay (ONS)" = "filterfpay",
                                                     "Pay Gap (ONS)" = "filtergap",
                                                     "Breastfeeding (ScotGov)" = "filterbf",
