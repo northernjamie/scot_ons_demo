@@ -96,7 +96,6 @@ skos:notation ?areacode
 # SPARQL is too big to run succesfully
 #qd <- SPARQL(endpoint,query)
 
-legendtitle <- "Median Pay Male"
 
 # Load the constituency geography file
 scotcouncil <- readOGR("ScottishCouncilAreas2_simplified.geojson", "OGRGeoJSON")
@@ -146,7 +145,7 @@ server <- (function(input, output, session) {
   #***Need to change this so that instead of it always filtering gap, it filters using the field selected in the filter dropdown
   selected <- reactive({
     subset(combdata,
-           gap < input$upper & gap >= input$lower)
+           (gap < input$upper & gap >= input$lower) | is.na(gap))
   })
   
   # Put the default map co-ordinates and zoom level into variables
@@ -184,7 +183,9 @@ server <- (function(input, output, session) {
       suffix <- ''
     } else if(input$map == 'mapfpay'){
       legendtitle <- 'Median Female Pay';
-      dynamicValue <- scotcouncil$Female
+      dynamicValue <- scotcouncil$Female;
+      prefix <- '£';
+      suffix <- ''
     } else if(input$map == 'mapapay'){
       legendtitle <- 'Median Pay';
       dynamicValue <- scotcouncil$All;
@@ -240,6 +241,27 @@ server <- (function(input, output, session) {
       addLegend(pal = qpal, values = ~dynamicValue, opacity = 0.7,
                 position = 'bottomleft',
                 title = paste0(legendtitle))
+    
+    #scatterplot
+    output$plot1 <- renderPlot({
+      ggplot(scotcouncil@data, aes(x=dynamicValue, y=scotcouncil$Breastfeeding,label=scotcouncil$areaname.x)) + geom_point(shape=21, size=6, color="blue",fill="red", alpha=0.3) + stat_smooth(method = "lm", col = "red") + ggtitle('Test Scatterplot') + labs(x=legendtitle, y='Breastfeeding Rates') + theme_bw() 
+    })
+    
+    observe({
+      click<-input$map_shape_click
+      if(is.null(click))
+        return()
+      
+      available <- combdata[ which(combdata$areacode == click$id), ]
+      
+      text2 <- paste0("Council area: ", available[1,1], " (", available[1,2],")")
+      
+      output$const_name<-renderText({
+        text2
+      })
+      
+    })
+    
   })
   
   observe({
@@ -247,32 +269,7 @@ server <- (function(input, output, session) {
     leafletProxy("map") %>% setView(lat = lat, lng = lng, zoom = zoom)
   })
   
-  observe({
-    click<-input$map_shape_click
-    if(is.null(click))
-      return()
-   
-    available <- combdata[ which(combdata$areacode == click$id), ]
-    
-    text2 <- paste0("Council area: ", available[1,1], " (", available[1,2],")")
-    
-    output$const_name<-renderText({
-      text2
-    })
-    
-    #Probably get rid of this for this demo and use scatterplot / plain barplot
-    #pgdist2Const <- pgdist2[ which(pgdist2$areacode == available[1,2]),]
-    #output$plot1 <- renderPlot({
-    #  ggplot() + geom_bar(data = pgdist2Const, aes(x=statname,y=All), stat="identity") + geom_point(data = pgdist2Nat, aes(x=statname,y=All), stat="identity")
-    #})
-    #scatterplot
-    output$plot1 <- renderPlot({
-      ggplot(combdata, aes(x=All, y=Breastfeeding,label=areaname.x)) + geom_point(shape=21, size=6, color="blue",fill="red", alpha=0.3) + stat_smooth(method = "lm", col = "red") + ggtitle('Test Scatterplot') + labs(x='Median Pay', y='Breastfeeding Rates') + theme_bw() 
-    })
-    
-    
-    
-  })
+  
   
   
   
