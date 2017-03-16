@@ -51,7 +51,7 @@ navbarPage("ONS Linked Data", id="nav",
                                       draggable = TRUE, top = 60, left = "auto", right = 20, bottom = "auto",
                                       width = 450, height = "auto",
                                       
-                                      h2("Choose Data"),
+                                      h2("Choose Data to compare"),
                                       selectInput("map","Map and x-axis of scatterplot:",
                                                   c("Median Pay (ONS)" = "mapapay",
                                                     "Median Male Pay (ONS)" = "mapmpay",
@@ -63,7 +63,7 @@ navbarPage("ONS Linked Data", id="nav",
                                                     "Dwellings per Hectare (ScotGov)" = "mapdwell",
                                                     "Alcohol-related Discharge (ScotGov)" = "mapalc"
                                                                  )),
-                                      selectInput("filter","Filter and y-axis of scatterplot:",
+                                      selectInput("filter","Y-axis of scatterplot:",
                                                   c("Median Pay (ONS)" = "filterapay",
                                                     "Median Male Pay (ONS)" = "filtermpay",
                                                     "Median Female Pay (ONS)" = "filterfpay",
@@ -76,9 +76,9 @@ navbarPage("ONS Linked Data", id="nav",
                                                   )),
                             
                                       #sliderInput("paygaprange", "Choose the range of values you would like to display", min = -5000, max = 20000, value = c(-5000,20000)),
-                                      numericInput("lower", "Filter values between", value= -5000),
-                                      numericInput("upper", "and", value=20000),
-                                      plotOutput("plot1", height=250)
+                                      #numericInput("lower", "Filter values between", value= -5000),
+                                      #numericInput("upper", "and", value=20000),
+                                      plotOutput("plot1", height=300)
                                       #parking this for now - arranging two chart elements side-by-side
                                       #fluidRow(
                                       #  column(6,plotOutput("plot1"))#,
@@ -108,21 +108,8 @@ navbarPage("ONS Linked Data", id="nav",
            tabPanel("DATA",
                     fluidRow(
                       column(3,
-                             div(h3("Gender Pay Gap"))
-                      ),
-                      column(3,
-                             div(h3("Gender Pay Gap"))
-                      ),
-                      column(3,
-                             div(h3("Gender Pay Gap"))
-                      )
-                    ),
-                    fluidRow(
-                      column(1,
-                             div(h3("Gender Pay Gap"))
-                      ),
-                      column(1,
-                             div(h3("Gender Pay Gap"))
+                             div(h3("Datatable")),
+                             DT::dataTableOutput("table")
                       )
                     )
            ),

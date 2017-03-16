@@ -102,12 +102,13 @@ scotcouncil <- readOGR("ScottishCouncilAreas2_simplified.geojson", "OGRGeoJSON")
 
 # Load the csv file containing the pay data
 pgdata <- read.csv2("ons_ashe_scot_paygap.csv",header = TRUE, sep=",")
+pgdata <- lapply(pgdata, function(x) {gsub("http://statistics.data.gov.uk", "http://ons.publishmydata.com", x)})
 
 #Load the csv file containing the scottish government data
 sgdata <- read.csv2("scot_stat_data.csv",header = TRUE, sep=",")
 
 #Turn the value column into from scientific notation to number
-#pgdata <- transform(pgdata, value = as.numeric(value))
+pgdata <- transform(pgdata, value = as.numeric(as.character(value)))
 sgdata <- transform(sgdata, value = as.numeric(as.character(value)))
 
 #Turn into dataframes
@@ -117,13 +118,20 @@ sgdata <- as.data.frame(sgdata)
 #Pick out only the median statistic from the paygap data (ie discarding distribution)
 pgdata2 <- pgdata[ which(pgdata$statname == "Median"), ]
 
+#Pivot the ONS Data to get the URI
+pgdata3 <- dcast(pgdata2,areaname + areacode ~ sexname, value.var = 's')
+
 #Pivot the data row headers to the left of the tilde, column headers to the right, then value
 pgdata2 <- dcast(pgdata2,areaname + areacode ~ sexname, value.var = 'value')
+pgdata2$gap <- with(pgdata2,Male - Female)
+#merge the two pivoted 
+pgdata2 <- merge(pgdata2,pgdata3,by="areacode")
+
 
 sgdata2 <- dcast(sgdata,areaname + areacode ~ indicatorlabel, value.var = 'value')
+sgdata3 <- dcast(sgdata,areaname + areacode ~ indicatorlabel, value.var = 's')
 
-#Add a calculated field for the paygap between males and females
-pgdata2$gap <- with(pgdata2,Male - Female)
+sgdata2 <- merge(sgdata2,sgdata3,by="areacode")
 
 #pgdist <- pgdata[ which(pgdata$year == "2016"), ]
 
@@ -143,10 +151,7 @@ server <- (function(input, output, session) {
   
   #Filter the data according to the values entered into the filter text boxes
   #***Need to change this so that instead of it always filtering gap, it filters using the field selected in the filter dropdown
-  selected <- reactive({
-    subset(combdata,
-           (gap < input$upper & gap >= input$lower) | is.na(gap))
-  })
+  
   
   # Put the default map co-ordinates and zoom level into variables
   lat <- 57.542788
@@ -163,72 +168,144 @@ server <- (function(input, output, session) {
     
   })
   
-  # Draw the table (the columns need to match with all those in selected())
-  output$table <- DT::renderDataTable({
-    data.frame(x=selected())}, colnames = c('areaname','areacode','All','Female','Male','gap'), options = list(order = list(7,'desc')))
-  
-  #
   observe({
     
     
     
-    #merge the data from the csv / sparql with the geojson data for mapping
-    scotcouncil@data <- left_join(scotcouncil@data, selected(), by=c("CODE"="areacode"))
+    #selected <- reactive({
+    #  subset(combdata,
+    #         (dynamicFilterValue < input$upper & dynamicFilterValue >= input$lower) | is.na(dynamicFilterValue))
+    #})
     
+    #merge the data from the csv / sparql with the geojson data for mapping
+    #scotcouncil@data <- left_join(scotcouncil@data, selected(), by=c("CODE"="areacode"))
+    scotcouncil@data <- left_join(scotcouncil@data, combdata, by=c("CODE"="areacode"))
     #test changing the map based on the dropdown
     if(input$map == 'mapmpay') {
       legendtitle <- 'Median Male Pay';
-      dynamicValue <- scotcouncil$Male;
+      dynamicValue <- scotcouncil$Male.x;
+      dynamicURL1 <- paste0(scotcouncil$Male.y,"?tab=api"); 
       prefix <- '£';
       suffix <- ''
     } else if(input$map == 'mapfpay'){
       legendtitle <- 'Median Female Pay';
-      dynamicValue <- scotcouncil$Female;
+      dynamicValue <- scotcouncil$Female.x;
+      dynamicURL1 <- paste0(scotcouncil$Female.y,"?tab=api");
       prefix <- '£';
       suffix <- ''
     } else if(input$map == 'mapapay'){
       legendtitle <- 'Median Pay';
-      dynamicValue <- scotcouncil$All;
+      dynamicValue <- scotcouncil$All.x;
+      dynamicURL1 <- paste0(scotcouncil$All.y,"?tab=api");
       prefix <- '£';
       suffix <- ''
     } else if(input$map == 'mapgap'){
       legendtitle <- 'Pay Gap';
       dynamicValue <- scotcouncil$gap;
+      dynamicURL1 <- '';
       prefix <- '£';
       suffix <- ''
     } else if(input$map == 'mapbf'){
       legendtitle <- 'Breastfeeding Rate';
-      dynamicValue <- scotcouncil$Breastfeeding;
+      dynamicValue <- scotcouncil$Breastfeeding.x;
+      dynamicURL1 <- scotcouncil$Breastfeeding.y;
       prefix <- '';
       suffix <- '%'
     } else if(input$map == 'mapfire'){
       legendtitle <- 'Deliberate Fires';
-      dynamicValue <- scotcouncil$`Deliberate fires`;
+      dynamicValue <- scotcouncil$`Deliberate fires.x`;
+      dynamicURL1 <- scotcouncil$`Deliberate fires.y`;
       prefix <- '';
       suffix <- ''
     } else if(input$map == 'mapjsa'){
       legendtitle <- 'JSA Claimants';
-      dynamicValue <- scotcouncil$`Job Seeker's Allowance Claimants`;
+      dynamicValue <- scotcouncil$`Job Seeker's Allowance Claimants.x`;
+      dynamicURL1 <- scotcouncil$`Job Seeker's Allowance Claimants.y`;
       prefix <- '';
       suffix <- '%'
     } else if(input$map == 'mapdwell'){
       legendtitle <- 'Dwellings per Hectare';
-      dynamicValue <- scotcouncil$`Dwellings per Hectare`;
+      dynamicValue <- scotcouncil$`Dwellings per Hectare.x`;
+      dynamicURL1 <- scotcouncil$`Dwellings per Hectare.y`;
       prefix <- '';
       suffix <- ' dwellings per hectare'
     } else if(input$map == 'mapalc'){
       legendtitle <- 'Alcohol-related Discharge';
-      dynamicValue <- scotcouncil$`Alcohol Related Hospital Discharge`;
+      dynamicValue <- scotcouncil$`Alcohol Related Hospital Discharge.x`;
+      dynamicURL1 <- scotcouncil$`Alcohol Related Hospital Discharge.y`;
       prefix <- '';
       suffix <- ''
     }
+    
+    #Change the filter and y-axis based on second dropdown
+    
+    if(input$filter == 'filtermpay') {
+      axistitle <- 'Median Male Pay';
+      dynamicFilterValue <- scotcouncil$Male.x;
+      dynamicURL2 <- paste0(scotcouncil$Male.y,"?tab=api");
+      prefix2 <- '£';
+      suffix2 <- ''
+    } else if(input$filter == 'filterfpay'){
+      axistitle <- 'Median Female Pay';
+      dynamicFilterValue <- scotcouncil$Female.x;
+      dynamicURL2 <- paste0(scotcouncil$Female.y,"?tab=api");
+      prefix2 <- '£';
+      suffix2 <- ''
+    } else if(input$filter == 'filterapay'){
+      axistitle <- 'Median Pay';
+      dynamicFilterValue <- scotcouncil$All.x;
+      dynamicURL2 <- paste0(scotcouncil$All.y,"?tab=api");
+      prefix2 <- '£';
+      suffix2 <- ''
+    } else if(input$filter == 'filtergap'){
+      axistitle <- 'Pay Gap';
+      dynamicFilterValue <- scotcouncil$gap.x;
+      dynamicURL2 <- ''
+      prefix2 <- '£';
+      suffix2 <- ''
+    } else if(input$filter == 'filterbf'){
+      axistitle <- 'Breastfeeding Rate';
+      dynamicFilterValue <- scotcouncil$Breastfeeding.x;
+      dynamicURL2 <- scotcouncil$Breastfeeding.y;
+      prefix2 <- '';
+      suffix2 <- '%'
+    } else if(input$filter == 'filterfire'){
+      axistitle <- 'Deliberate Fires';
+      dynamicFilterValue <- scotcouncil$`Deliberate fires.x`;
+      dynamicURL2 <- scotcouncil$`Deliberate fires.y`;
+      prefix2 <- '';
+      suffix2 <- ''
+    } else if(input$filter == 'filterjsa'){
+      axistitle <- 'JSA Claimants';
+      dynamicFilterValue <- scotcouncil$`Job Seeker's Allowance Claimants.x`;
+      dynamicURL2 <- scotcouncil$`Job Seeker's Allowance Claimants.y`;
+      prefix2 <- '';
+      suffix2 <- '%'
+    } else if(input$filter == 'filterdwell'){
+      axistitle <- 'Dwellings per Hectare';
+      dynamicFilterValue <- scotcouncil$`Dwellings per Hectare.x`;
+      dynamicURL2 <- scotcouncil$`Dwellings per Hectare.y`;
+      prefix2 <- '';
+      suffix2 <- ' dwellings per hectare'
+    } else if(input$filter == 'filteralc'){
+      axistitle <- 'Alcohol-related Discharge';
+      dynamicFilterValue <- scotcouncil$`Alcohol Related Hospital Discharge.x`;
+      dynamicURL2 <- scotcouncil$`Alcohol Related Hospital Discharge.y`;
+      prefix2 <- '';
+      suffix2 <- ''
+    }
+    
+    # Draw the table (the columns need to match with all those in selected())
+    output$table <- DT::renderDataTable({
+      data.frame(x=combdata)})
+    
     
     #sets the colour range to be used on the choropleth
     qpal <- colorNumeric("Spectral", dynamicValue, na.color = "#bdbdbd")
     
     #the popup on the map
     
-    popup <- paste0("<h5>",scotcouncil$NAME,"</h5><br /><h3>",prefix,dynamicValue,suffix,"</h3>")
+    popup <- paste0("<h5>",scotcouncil$NAME,"</h5><br /><h5>",legendtitle,": <a href='",dynamicURL1,"'>",prefix,dynamicValue,suffix,"</a></h5><br /><h5>",axistitle,": <a href='",dynamicURL2,"'>",prefix2,dynamicFilterValue,suffix2,"</a></h5>")
     
     #draw the map with stuff on
     #***Need to make this dynamic based on what's selected in the map dropdown
@@ -244,7 +321,7 @@ server <- (function(input, output, session) {
     
     #scatterplot
     output$plot1 <- renderPlot({
-      ggplot(scotcouncil@data, aes(x=dynamicValue, y=scotcouncil$Breastfeeding,label=scotcouncil$areaname.x)) + geom_point(shape=21, size=6, color="blue",fill="red", alpha=0.3) + stat_smooth(method = "lm", col = "red") + ggtitle('Test Scatterplot') + labs(x=legendtitle, y='Breastfeeding Rates') + theme_bw() 
+      ggplot(scotcouncil@data, aes(x=dynamicValue, y=dynamicFilterValue,label=scotcouncil$areaname.x.x)) + geom_point(shape=21, size=6, color="blue",fill="red", alpha=0.3) + stat_smooth(method = "lm", col = "red") + ggtitle('Test Scatterplot') + labs(x=legendtitle, y=axistitle) + theme_bw() 
     })
     
     observe({
