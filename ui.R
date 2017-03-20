@@ -74,7 +74,7 @@ navbarPage("ONS Linked Data", id="nav",
                                                     "Dwellings per Hectare (ScotGov)" = "filterdwell",
                                                     "Alcohol-related Discharge (ScotGov)" = "filteralc"
                                                   ),
-                                                  selected = c("Jobseekers (ScotGov)" = "filterjsa")),
+                                                  selected = c("Breastfeeding (ScotGov)" = "filterbf")),
                             
                                       #sliderInput("paygaprange", "Choose the range of values you would like to display", min = -5000, max = 20000, value = c(-5000,20000)),
                                       #numericInput("lower", "Filter values between", value= -5000),

@@ -190,24 +190,28 @@ server <- (function(input, output, session) {
     if(input$map == 'mapmpay') {
       legendtitle <- 'Median Male Pay';
       dynamicValue <- scotcouncil$Male.x;
-      dynamicURL1 <- paste0(scotcouncil$Male.y,"?tab=api"); 
+      dynamicURL1 <- paste0(scotcouncil$Male.y,"?tab=api");
+      dv2 <- 'Male.x';
       prefix <- '£';
       suffix <- ''
     } else if(input$map == 'mapfpay'){
       legendtitle <- 'Median Female Pay';
       dynamicValue <- scotcouncil$Female.x;
       dynamicURL1 <- paste0(scotcouncil$Female.y,"?tab=api");
+      dv2 <- 'Female.x';
       prefix <- '£';
       suffix <- ''
     } else if(input$map == 'mapapay'){
       legendtitle <- 'Median Pay';
       dynamicValue <- scotcouncil$All.x;
+      dv2 <- 'All.x';
       dynamicURL1 <- paste0(scotcouncil$All.y,"?tab=api");
       prefix <- '£';
       suffix <- ''
     } else if(input$map == 'mapgap'){
       legendtitle <- 'Pay Gap';
       dynamicValue <- scotcouncil$gap;
+      dv2 <- 'gap';
       dynamicURL1 <- '';
       prefix <- '£';
       suffix <- ''
@@ -215,24 +219,28 @@ server <- (function(input, output, session) {
       legendtitle <- 'Breastfeeding Rate';
       dynamicValue <- scotcouncil$Breastfeeding.x;
       dynamicURL1 <- scotcouncil$Breastfeeding.y;
+      dv2 <- 'Breastfeeding.x';
       prefix <- '';
       suffix <- '%'
     } else if(input$map == 'mapfire'){
       legendtitle <- 'Deliberate Fires';
       dynamicValue <- scotcouncil$`Deliberate fires.x`;
       dynamicURL1 <- scotcouncil$`Deliberate fires.y`;
+      dv2 <- '`Deliberate fires.x`';
       prefix <- '';
       suffix <- ''
     } else if(input$map == 'mapjsa'){
       legendtitle <- 'JSA Claimants';
       dynamicValue <- scotcouncil$`Job Seeker's Allowance Claimants.x`;
       dynamicURL1 <- scotcouncil$`Job Seeker's Allowance Claimants.y`;
+      dv2 <- "Job Seeker's Allowance Claimants.x";
       prefix <- '';
       suffix <- '%'
     } else if(input$map == 'mapdwell'){
       legendtitle <- 'Dwellings per Hectare';
       dynamicValue <- scotcouncil$`Dwellings per Hectare.x`;
       dynamicURL1 <- scotcouncil$`Dwellings per Hectare.y`;
+      dv2 <- 'Dwellings per Hectare.x';
       prefix <- '';
       suffix <- ' dwellings per hectare'
     } else if(input$map == 'mapalc'){
@@ -240,6 +248,7 @@ server <- (function(input, output, session) {
       dynamicValue <- scotcouncil$`Alcohol Related Hospital Discharge.x`;
       dynamicURL1 <- scotcouncil$`Alcohol Related Hospital Discharge.y`;
       prefix <- '';
+      dv2 <- 'Alcohol Related Hospital Discharge.x';
       suffix <- ''
     }
     
@@ -249,29 +258,34 @@ server <- (function(input, output, session) {
       axistitle <- 'Median Male Pay';
       dynamicFilterValue <- scotcouncil$Male.x;
       dynamicURL2 <- paste0(scotcouncil$Male.y,"?tab=api");
+      dfv2 <- 'Male.x';
       prefix2 <- '£';
       suffix2 <- ''
     } else if(input$filter == 'filterfpay'){
       axistitle <- 'Median Female Pay';
       dynamicFilterValue <- scotcouncil$Female.x;
       dynamicURL2 <- paste0(scotcouncil$Female.y,"?tab=api");
+      dfv2 <- 'Female.x';
       prefix2 <- '£';
       suffix2 <- ''
     } else if(input$filter == 'filterapay'){
       axistitle <- 'Median Pay';
       dynamicFilterValue <- scotcouncil$All.x;
       dynamicURL2 <- paste0(scotcouncil$All.y,"?tab=api");
+      dfv2 <- 'All.x';
       prefix2 <- '£';
       suffix2 <- ''
     } else if(input$filter == 'filtergap'){
       axistitle <- 'Pay Gap';
-      dynamicFilterValue <- scotcouncil$gap.x;
-      dynamicURL2 <- ''
+      dynamicFilterValue <- scotcouncil$gap;
+      dfv2 <- 'gap';
+      dynamicURL2 <- '';
       prefix2 <- '£';
       suffix2 <- ''
     } else if(input$filter == 'filterbf'){
       axistitle <- 'Breastfeeding Rate';
       dynamicFilterValue <- scotcouncil$Breastfeeding.x;
+      dfv2 <- 'Breastfeeding.x';
       dynamicURL2 <- scotcouncil$Breastfeeding.y;
       prefix2 <- '';
       suffix2 <- '%'
@@ -279,11 +293,13 @@ server <- (function(input, output, session) {
       axistitle <- 'Deliberate Fires';
       dynamicFilterValue <- scotcouncil$`Deliberate fires.x`;
       dynamicURL2 <- scotcouncil$`Deliberate fires.y`;
+      dfv2 <- 'Deliberate fires.x';
       prefix2 <- '';
       suffix2 <- ''
     } else if(input$filter == 'filterjsa'){
       axistitle <- 'JSA Claimants';
       dynamicFilterValue <- scotcouncil$`Job Seeker's Allowance Claimants.x`;
+      dfv2 <- "Job Seeker's Allowance Claimants.x";
       dynamicURL2 <- scotcouncil$`Job Seeker's Allowance Claimants.y`;
       prefix2 <- '';
       suffix2 <- '%'
@@ -291,12 +307,14 @@ server <- (function(input, output, session) {
       axistitle <- 'Dwellings per Hectare';
       dynamicFilterValue <- scotcouncil$`Dwellings per Hectare.x`;
       dynamicURL2 <- scotcouncil$`Dwellings per Hectare.y`;
+      dfv2 <- 'Dwellings per Hectare.x';
       prefix2 <- '';
       suffix2 <- ' dwellings per hectare'
     } else if(input$filter == 'filteralc'){
       axistitle <- 'Alcohol-related Discharge';
       dynamicFilterValue <- scotcouncil$`Alcohol Related Hospital Discharge.x`;
       dynamicURL2 <- scotcouncil$`Alcohol Related Hospital Discharge.y`;
+      dfv2 <- 'Alcohol Related Hospital Discharge.x';
       prefix2 <- '';
       suffix2 <- ''
     }
@@ -362,11 +380,15 @@ server <- (function(input, output, session) {
       available <- combdata[ which(combdata$areacode == click$id), ]
       
       text2 <- paste0("Council area: ", available[1,1], " (", available[1,2],")")
-      
       output$const_name<-renderText({
         text2
       })
+      scatterpoint <- scotcouncil@data[ which(scotcouncil$CODE == click$id), ]
       
+      #Colour the scatterplot according the are of the map clicked
+      output$plot1 <- renderPlot({
+        ggplot() + geom_point(data=scotcouncil@data, aes(x=dynamicValue, y=dynamicFilterValue), shape=21, size=6, color="blue", fill="red", alpha=0.3) + geom_point(data=scatterpoint, aes(x=scatterpoint[dv2], y=scatterpoint[dfv2]), shape=21, size=6, color="blue",fill="purple", alpha=0.8) + stat_smooth(data=scotcouncil@data, aes(x=dynamicValue, y=dynamicFilterValue),method = "lm", col = "red") + labs(x=legendtitle, y=axistitle) + theme_bw() 
+      })
     })
     
   })
