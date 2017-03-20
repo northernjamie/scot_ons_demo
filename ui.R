@@ -63,7 +63,7 @@ navbarPage("ONS Linked Data", id="nav",
                                                     "Dwellings per Hectare (ScotGov)" = "mapdwell",
                                                     "Alcohol-related Discharge (ScotGov)" = "mapalc"
                                                                  )),
-                                      selectInput("filter","Y-axis of scatterplot:",
+                                      selectInput("filter","y-axis of scatterplot:",
                                                   c("Median Pay (ONS)" = "filterapay",
                                                     "Median Male Pay (ONS)" = "filtermpay",
                                                     "Median Female Pay (ONS)" = "filterfpay",
@@ -73,7 +73,8 @@ navbarPage("ONS Linked Data", id="nav",
                                                     "Jobseekers (ScotGov)" = "filterjsa",
                                                     "Dwellings per Hectare (ScotGov)" = "filterdwell",
                                                     "Alcohol-related Discharge (ScotGov)" = "filteralc"
-                                                  )),
+                                                  ),
+                                                  selected = c("Jobseekers (ScotGov)" = "filterjsa")),
                             
                                       #sliderInput("paygaprange", "Choose the range of values you would like to display", min = -5000, max = 20000, value = c(-5000,20000)),
                                       #numericInput("lower", "Filter values between", value= -5000),
@@ -116,8 +117,11 @@ navbarPage("ONS Linked Data", id="nav",
            
            tabPanel("ABOUT",
                     fluidRow(
-                      column(1,
-                             div(h5("About this tool"))
+                      column(10,
+                             div(h5("About this tool")),
+                             p("This is an example of a Shiny tool - which is bringing together data from the ", a("Office for National Statistics linked data store", href="http://ons.publishmydata.com"), "and ",
+                             a("statistics.gov.scot", href="http://statistics.gov.scot"),
+                             (" - the home of Scotland's official statistics. "))
                              )
                       )
                     ),

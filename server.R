@@ -26,6 +26,7 @@ SELECT ?s ?value ?areaname ?sexname ?areacode ?statname WHERE {
 }"
 
 #This is the megaquery that pulls a range of indicators from Scottish Datastore
+scotendpoint <- "http://statistics.gov.scot/sparql"
 scotstatquery <- "PREFIX qb: <http://purl.org/linked-data/cube#>
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 PREFIX sdmx: <http://purl.org/linked-data/sdmx/2009/concept#>
@@ -93,7 +94,8 @@ rdfs:label ?areaname ;
 skos:notation ?areacode
 }"
 
-# SPARQL is too big to run succesfully
+# SPARQL results from ONS are too big to run succesfully
+#*** need to break it up into smaller chunks so it'll process it
 #qd <- SPARQL(endpoint,query)
 
 
@@ -104,8 +106,12 @@ scotcouncil <- readOGR("ScottishCouncilAreas2_simplified.geojson", "OGRGeoJSON")
 pgdata <- read.csv2("ons_ashe_scot_paygap.csv",header = TRUE, sep=",")
 pgdata <- lapply(pgdata, function(x) {gsub("http://statistics.data.gov.uk", "http://ons.publishmydata.com", x)})
 
-#Load the csv file containing the scottish government data
+#Load the csv file containing the scottish government data (remove csv to make it run)
 sgdata <- read.csv2("scot_stat_data.csv",header = TRUE, sep=",")
+
+#Alternative way of getting data - SPARQL. Getting an error "Error in (function (..., row.names = NULL, check.rows = FALSE, check.names = TRUE,  : 
+#arguments imply differing number of rows: 160, 0" Think its something to do with the shape of the response
+#sgdata <- SPARQL(scotendpoint,scotstatquery)
 
 #Turn the value column into from scientific notation to number
 pgdata <- transform(pgdata, value = as.numeric(as.character(value)))
