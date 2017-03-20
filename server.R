@@ -5,7 +5,7 @@
 # http://shiny.rstudio.com
 #
 
-library(shiny) ; library(dplyr) ; library(rgdal) ; library(leaflet) ; library(raster) ; library(SPARQL) ; library(DT) ; library(reshape2) ; library(ggplot2)
+library(shiny) ; library(dplyr) ; library(rgdal) ; library(leaflet) ; library(raster) ; library(SPARQL) ; library(DT) ; library(reshape2) ; library(ggplot2) ; library(plyr)
 
 endpoint <- "http://ons.publishmydata.com/sparql"
 scotpayquery <- "PREFIX qb: <http://purl.org/linked-data/cube#>
@@ -302,9 +302,33 @@ server <- (function(input, output, session) {
     }
     
     # Draw the table (the columns need to match with all those in selected())
-    output$table <- DT::renderDataTable({
-      data.frame(x=combdata)})
     
+    urlddata <- data.frame(paste0(combdata$areacode),
+                           paste0(combdata$areaname.x.x),
+                           paste0("<a href='",combdata$All.y,"?tab=api'>", combdata$All.x,"</a>"),
+                           paste0("<a href='",combdata$Male.y,"?tab=api'>", combdata$Male.x,"</a>"),
+                           paste0("<a href='",combdata$Female.y,"?tab=api'>", combdata$Female.x,"</a>"),
+                           paste0("<a href='",combdata$`Alcohol Related Hospital Discharge.y`,"'>", combdata$`Alcohol Related Hospital Discharge.x`,"</a>"),
+                           paste0("<a href='",combdata$`Job Seeker's Allowance Claimants.y`,"'>", combdata$`Job Seeker's Allowance Claimants.x`,"</a>"),
+                           paste0("<a href='",combdata$`Deliberate fires.y`,"'>", combdata$`Deliberate fires.x`,"</a>"),
+                           paste0("<a href='",combdata$`Dwellings per Hectare.y`,"'>", combdata$`Dwellings per Hectare.x`,"</a>"),
+                           paste0("<a href='",combdata$Breastfeeding.y,"'>", combdata$Breastfeeding.x,"</a>")
+                           )
+    
+    colnames(urlddata) <- c("Council Code",
+                            "Council Name",
+                            "Median Pay (All)",
+                            "Median Pay (Male)",
+                            "Median Pay (Female)",
+                            "Alcohol Related Hospital Discharge",
+                            "Jobseekers Allowance Claimants",
+                            "Deliberate Fires",
+                            "Dwellings per Hectare",
+                            "Breastfeeding")
+    
+    
+  
+    output$table <- DT::renderDataTable(datatable(urlddata, escape = FALSE))
     
     #sets the colour range to be used on the choropleth
     qpal <- colorNumeric("Spectral", dynamicValue, na.color = "#bdbdbd")
@@ -327,7 +351,7 @@ server <- (function(input, output, session) {
     
     #scatterplot
     output$plot1 <- renderPlot({
-      ggplot(scotcouncil@data, aes(x=dynamicValue, y=dynamicFilterValue,label=scotcouncil$areaname.x.x)) + geom_point(shape=21, size=6, color="blue",fill="red", alpha=0.3) + stat_smooth(method = "lm", col = "red") + ggtitle('Test Scatterplot') + labs(x=legendtitle, y=axistitle) + theme_bw() 
+      ggplot(scotcouncil@data, aes(x=dynamicValue, y=dynamicFilterValue,label=scotcouncil$areaname.x.x)) + geom_point(shape=21, size=6, color="blue",fill="red", alpha=0.3) + stat_smooth(method = "lm", col = "red") + labs(x=legendtitle, y=axistitle) + theme_bw() 
     })
     
     observe({
