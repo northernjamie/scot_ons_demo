@@ -35,46 +35,46 @@ PREFIX sdmxd: <http://purl.org/linked-data/sdmx/2009/dimension#>
 PREFIX mp: <http://statistics.gov.scot/def/measure-properties/>
 PREFIX stat: <http://statistics.data.gov.uk/def/statistical-entity#>
 PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
-SELECT ?areaname ?indicatorlabel ?yearname ?value ?areacode
+SELECT ?s ?areaname ?indicatorlabel ?yearname ?value ?areacode
 WHERE {
-{?indicator qb:dataSet data:job-seekers-allowance;
+{?s qb:dataSet data:job-seekers-allowance;
 mp:ratio ?value ;
 sdmxd:refPeriod <http://reference.data.gov.uk/id/quarter/2012-Q4> ;
 <http://statistics.gov.scot/def/dimension/age> <http://statistics.gov.scot/def/concept/age/16-64> ;
 <http://statistics.gov.scot/def/dimension/gender> <http://statistics.gov.scot/def/concept/gender/all> .
 data:job-seekers-allowance rdfs:label ?indicatorlabel}
 UNION
-{?indicator qb:dataSet data:dwellings-hectare;
+{?s qb:dataSet data:dwellings-hectare;
 mp:ratio ?value ;
 sdmxd:refPeriod <http://reference.data.gov.uk/id/year/2012> .
 data:dwellings-hectare rdfs:label ?indicatorlabel}
 UNION
-{?indicator qb:dataSet data:smoking-at-booking;
+{?s qb:dataSet data:smoking-at-booking;
 mp:ratio ?value ;
 sdmxd:refPeriod <http://reference.data.gov.uk/id/gregorian-interval/2013-01-01T00:00:00/P2Y> ;
 <http://statistics.gov.scot/def/dimension/populationGroup> <http://statistics.gov.scot/def/concept/population-group/current-smoker> .
 BIND ('Antenatal smoking' as ?indicatorlabel) .}
 UNION
-{?indicator qb:dataSet data:low-birthweight;
+{?s qb:dataSet data:low-birthweight;
 mp:ratio ?value ;
 sdmxd:refPeriod <http://reference.data.gov.uk/id/gregorian-interval/2013-01-01T00:00:00/P2Y> ;
 <http://statistics.gov.scot/def/dimension/birthWeight> <http://statistics.gov.scot/def/concept/birth-weight/low-weight-births> .
 data:low-birthweight rdfs:label ?indicatorlabel}
 UNION
-{?indicator qb:dataSet data:fire;
+{?s qb:dataSet data:fire;
 mp:ratio ?value ;
 sdmxd:refPeriod <http://reference.data.gov.uk/id/year/2012> ;
 <http://statistics.gov.scot/def/dimension/indicator(fire)> <http://statistics.gov.scot/def/concept/indicator-fire/deliberate-fires-excluding-chimney-fires-per-100-000-population> .
 BIND ('Deliberate fires' as ?indicatorlabel) .}
 UNION
-{?indicator qb:dataSet data:breastfeeding;
+{?s qb:dataSet data:breastfeeding;
 mp:ratio ?value ;
 sdmxd:refPeriod <http://reference.data.gov.uk/id/year/2013> ;
 <http://statistics.gov.scot/def/dimension/breastfeedingDataCollectionTime> <http://statistics.gov.scot/def/concept/breastfeeding-data-collection-time/first-visit> ;
 <http://statistics.gov.scot/def/dimension/populationGroup> <http://statistics.gov.scot/def/concept/population-group/breastfed> .
 data:breastfeeding rdfs:label ?indicatorlabel}
 UNION
-{?indicator qb:dataSet data:fuel-poverty-shcs;
+{?s qb:dataSet data:fuel-poverty-shcs;
 mp:ratio ?value ;
 sdmxd:refPeriod <http://reference.data.gov.uk/id/gregorian-interval/2010-01-01T00:00:00/P2Y> ;
 <http://statistics.gov.scot/def/dimension/age> <http://statistics.gov.scot/def/concept/age/all> ;
@@ -82,11 +82,11 @@ sdmxd:refPeriod <http://reference.data.gov.uk/id/gregorian-interval/2010-01-01T0
 <http://statistics.gov.scot/def/dimension/disabilityStatus> <http://statistics.gov.scot/def/concept/disability-status/all> .
 BIND ('Perc of households in fuel poverty' as ?indicatorlabel) .}
 UNION
-{?indicator qb:dataSet data:alcohol-related-discharge ;
+{?s qb:dataSet data:alcohol-related-discharge ;
 mp:ratio ?value ;
 sdmxd:refPeriod <http://reference.data.gov.uk/id/government-year/2012-2013> .
 data:alcohol-related-discharge rdfs:label ?indicatorlabel} .
-?indicator sdmxd:refArea ?area ;
+?s sdmxd:refArea ?area ;
 sdmxd:refPeriod ?year .
 ?year rdfs:label ?yearname .
 ?area stat:code <http://statistics.gov.scot/id/statistical-entity/S12> ;
