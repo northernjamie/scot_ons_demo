@@ -79,7 +79,8 @@ navbarPage("ONS Linked Data", id="nav",
                                       #sliderInput("paygaprange", "Choose the range of values you would like to display", min = -5000, max = 20000, value = c(-5000,20000)),
                                       #numericInput("lower", "Filter values between", value= -5000),
                                       #numericInput("upper", "and", value=20000),
-                                      plotOutput("plot1", height=300)
+                                      plotOutput("plot1", height=300),
+                                      DT::dataTableOutput("areastats")
                                       #parking this for now - arranging two chart elements side-by-side
                                       #fluidRow(
                                       #  column(6,plotOutput("plot1"))#,

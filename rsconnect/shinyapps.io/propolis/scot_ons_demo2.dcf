@@ -3,8 +3,8 @@ title: scot_ons_demo2
 account: propolis
 server: shinyapps.io
 appId: 165227
-bundleId: 754504
+bundleId: 754866
 url: https://propolis.shinyapps.io/scot_ons_demo2/
-when: 1490012178.7917
+when: 1490026444.40316
 asMultiple: FALSE
 asStatic: FALSE
