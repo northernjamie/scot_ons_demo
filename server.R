@@ -381,7 +381,7 @@ server <- (function(input, output, session) {
       
       #**** Trying to make the area stat box table - needs more work to get it into the right shape****
       areastatboxraw <- urlddata[ which(urlddata[1] == click$id), ]
-      areastatbox <- dcast(areastatboxraw)
+      areastatbox <- (areastatboxraw)
       output$areastats <- DT::renderDataTable(datatable(areastatbox, escape = FALSE))
       text2 <- paste0("Council area: ", available[1,1], " (", available[1,2],")")
       output$const_name<-renderText({
