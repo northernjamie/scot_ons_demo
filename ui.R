@@ -40,8 +40,9 @@ navbarPage("ONS Linked Data", id="nav",
                         
                         tags$head(
                           # Include our custom CSS
-                          includeCSS("styles.css"),
-                          includeScript("gomap.js")
+                          includeCSS("styles.css")
+                          
+                          #includeScript("gomap.js")
                         ),
                         
                         leafletOutput("map", width="100%", height="100%"),
@@ -80,7 +81,8 @@ navbarPage("ONS Linked Data", id="nav",
                                       #numericInput("lower", "Filter values between", value= -5000),
                                       #numericInput("upper", "and", value=20000),
                                       plotOutput("plot1", height=300),
-                                      DT::dataTableOutput("areastats")
+                                      #DT::dataTableOutput("areastats"),
+                                      htmlOutput("areastatbox")
                                       #parking this for now - arranging two chart elements side-by-side
                                       #fluidRow(
                                       #  column(6,plotOutput("plot1"))#,

@@ -19,6 +19,15 @@ body, label, input, button, select {
 }
 h1, h2, h3, h4 { font-weight: 400; }
 
+.boldtabletext {
+  font-weight: bold;
+}
+
+#statbox td {
+  border-bottom: 1px solid #ddd;
+  padding:  5px
+}
+
 #controls {
   /* Appearance */
   background-color: white;

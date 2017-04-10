@@ -128,6 +128,8 @@ pgdata3 <- dcast(pgdata2,areaname + areacode ~ sexname, value.var = 's')
 
 #Pivot the data row headers to the left of the tilde, column headers to the right, then value
 pgdata2 <- dcast(pgdata2,areaname + areacode ~ sexname, value.var = 'value')
+
+#Add in the calculated field for the gap
 pgdata2$gap <- with(pgdata2,Male - Female)
 #merge the two pivoted 
 pgdata2 <- merge(pgdata2,pgdata3,by="areacode")
@@ -379,13 +381,31 @@ server <- (function(input, output, session) {
       available <- combdata[ which(combdata$areacode == click$id), ]
       
       #**** Trying to make the area stat box table - needs more work to get it into the right shape****
+      #Don't think I need this to be a datatable. Just a text box with variables???
+      
       areastatboxraw <- urlddata[ which(urlddata[1] == click$id), ]
       areastatbox <- (areastatboxraw)
       output$areastats <- DT::renderDataTable(datatable(areastatbox, escape = FALSE))
-      text2 <- paste0("Council area: ", available[1,1], " (", available[1,2],")")
-      output$const_name<-renderText({
-        text2
+      
+      
+      #Build the area stat box
+      statboxtext <- paste0("<table id='statbox'><tr><td>Council area: </td><td class='boldtabletext'>", 
+                            available[1,2]," (", available[1,1],")</td></tr>
+                            <tr><td>Median Pay (All):</td><td class='boldtabletext'>", sprintf('£%.0f',available[1,3]),"</td></tr>
+                            <tr><td>Median Pay (Female):</td><td class='boldtabletext'>", sprintf('£%.0f',available[1,4]),"</td></tr>
+                            <tr><td>Median Pay (Male):</td><td class='boldtabletext'>", sprintf('£%.0f',available[1,5]),"</td></tr>
+                            <tr><td>Pay Gap:</td><td class='boldtabletext'>", sprintf('£%.0f',available[1,6]),"</td></tr>
+                            <tr><td>Alcohol Related Hospital Discharge:</td><td class='boldtabletext'>", available[1,12],"</td></tr>
+                            <tr><td>Breastfeeding Rate:</td><td class='boldtabletext'>", sprintf('%.1f%%',available[1,13]),"</td></tr>
+                            <tr><td>Deliberate Fires:</td><td class='boldtabletext'>", available[1,14],"</td></tr>
+                            <tr><td>Dwellings per Hectare:</td><td class='boldtabletext'>", available[1,15],"</td></tr>
+                            <tr><td>Jobseekers Allowance Claimants:</td><td class='boldtabletext'>", sprintf('%.1f%%',available[1,16]),"</td></tr>
+                            </table>")
+      output$areastatbox<-renderText({
+        statboxtext
       })
+      
+      
       scatterpoint <- scotcouncil@data[ which(scotcouncil$CODE == click$id), ]
       
       #Colour the scatterplot according the are of the map clicked
