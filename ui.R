@@ -49,7 +49,7 @@ navbarPage("ONS Linked Data", id="nav",
                         
                         # Shiny versions prior to 0.11 should use class="modal" instead.
                         absolutePanel(id = "controls",style = " height: 100vh; overflow-y: auto; ", class = "panel panel-default", fixed = TRUE,
-                                      draggable = TRUE, top = 60, left = "auto", right = 20, bottom = "auto",
+                                      draggable = TRUE, top = 60, left = "auto", right = 30, bottom = "auto",
                                       width = 450, height = "auto",
                                       
                                       h2("Choose Data to compare"),
@@ -80,7 +80,11 @@ navbarPage("ONS Linked Data", id="nav",
                                       #sliderInput("paygaprange", "Choose the range of values you would like to display", min = -5000, max = 20000, value = c(-5000,20000)),
                                       #numericInput("lower", "Filter values between", value= -5000),
                                       #numericInput("upper", "and", value=20000),
-                                      plotOutput("plot1", height=300),
+                                      plotOutput("plot1", height=300, width=400,
+                                                 click = clickOpts(
+                                                   id = "plot_click"
+                                                 )),
+                                      textOutput("click_scatter"),
                                       #DT::dataTableOutput("areastats"),
                                       htmlOutput("areastatbox")
                                       #parking this for now - arranging two chart elements side-by-side

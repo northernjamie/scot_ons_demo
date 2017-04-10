@@ -103,6 +103,7 @@ scotcouncil <- readOGR("ScottishCouncilAreas2_simplified.geojson", "OGRGeoJSON")
 
 # Load the csv file containing the pay data
 pgdata <- read.csv2("ons_ashe_scot_paygap.csv",header = TRUE, sep=",")
+#Swap the URI prefixes for ones that work
 pgdata <- lapply(pgdata, function(x) {gsub("http://statistics.data.gov.uk", "http://ons.publishmydata.com", x)})
 
 #Load the csv file containing the scottish government data (remove csv to make it run)
@@ -154,6 +155,18 @@ pgdist2Nat <- pgdist2[ which(pgdist2$areacode == "K03000001"),]
 #Merge the two dataframes into one, horizontally
 combdata <- merge(pgdata2,sgdata2,by="areacode")
 
+#put in the ranks of each in
+combdata$MedianPay.Rank[order(combdata$All.x, decreasing = TRUE)] <- 1:nrow(combdata)
+combdata$MedianPayF.Rank[order(combdata$Female.x, decreasing = TRUE)] <- 1:nrow(combdata)
+combdata$MedianPayM.Rank[order(combdata$Male.x, decreasing = TRUE)] <- 1:nrow(combdata)
+combdata$PayGap.Rank[order(combdata$gap, decreasing = FALSE)] <- 1:nrow(combdata)
+combdata$AlcoholDisch.Rank[order(combdata$`Alcohol Related Hospital Discharge.x`, decreasing = FALSE)] <- 1:nrow(combdata)
+combdata$Breastfeeding.Rank[order(combdata$Breastfeeding.x, decreasing = TRUE)] <- 1:nrow(combdata)
+combdata$DelibFires.Rank[order(combdata$`Deliberate fires.x`, decreasing = FALSE)] <- 1:nrow(combdata)
+combdata$Dwellings.Rank[order(combdata$`Dwellings per Hectare.x`, decreasing = FALSE)] <- 1:nrow(combdata)
+combdata$JSA.Rank[order(combdata$`Job Seeker's Allowance Claimants.x`, decreasing = FALSE)] <- 1:nrow(combdata)
+
+
 server <- (function(input, output, session) {
   
   #Filter the data according to the values entered into the filter text boxes
@@ -177,15 +190,12 @@ server <- (function(input, output, session) {
   
   observe({
     
-    
-    
     #selected <- reactive({
     #  subset(combdata,
     #         (dynamicFilterValue < input$upper & dynamicFilterValue >= input$lower) | is.na(dynamicFilterValue))
     #})
     
     #merge the data from the csv / sparql with the geojson data for mapping
-    #scotcouncil@data <- left_join(scotcouncil@data, selected(), by=c("CODE"="areacode"))
     scotcouncil@data <- left_join(scotcouncil@data, combdata, by=c("CODE"="areacode"))
     #test changing the map based on the dropdown
     if(input$map == 'mapmpay') {
@@ -205,6 +215,7 @@ server <- (function(input, output, session) {
     } else if(input$map == 'mapapay'){
       legendtitle <- 'Median Pay';
       dynamicValue <- scotcouncil$All.x;
+      dynVal <- 'All.x';
       dv2 <- 'All.x';
       dynamicURL1 <- paste0(scotcouncil$All.y,"?tab=api");
       prefix <- '£';
@@ -286,6 +297,7 @@ server <- (function(input, output, session) {
     } else if(input$filter == 'filterbf'){
       axistitle <- 'Breastfeeding Rate';
       dynamicFilterValue <- scotcouncil$Breastfeeding.x;
+      dynFiltVal <- 'Breastfeeding.x';
       dfv2 <- 'Breastfeeding.x';
       dynamicURL2 <- scotcouncil$Breastfeeding.y;
       prefix2 <- '';
@@ -345,9 +357,12 @@ server <- (function(input, output, session) {
                             "Dwellings per Hectare",
                             "Breastfeeding")
     
-    
-  
     output$table <- DT::renderDataTable(datatable(urlddata, escape = FALSE))
+    
+    #create temporary dataframe for use in map and scatter
+    
+    dynamicdf <- scotcouncil@data[, c('NAME','CODE',dynVal,dynFiltVal)]
+    print(dynamicdf)
     
     #sets the colour range to be used on the choropleth
     qpal <- colorNumeric("Spectral", dynamicValue, na.color = "#bdbdbd")
@@ -370,13 +385,25 @@ server <- (function(input, output, session) {
     
     #scatterplot
     output$plot1 <- renderPlot({
-      ggplot(scotcouncil@data, aes(x=dynamicValue, y=dynamicFilterValue,label=scotcouncil$areaname.x.x)) + geom_point(shape=21, size=6, color="blue",fill="red", alpha=0.3) + stat_smooth(method = "lm", col = "red") + labs(x=legendtitle, y=axistitle) + theme_bw() 
+      ggplot(dynamicdf, aes(x=dynamicdf[3], y=dynamicdf[4],label=dynamicdf[1])) + geom_point(shape=21, size=6, color='blue', fill='red', alpha=0.3) + stat_smooth(method='lm', col='red') + labs(x = legendtitle, y=axistitle) + theme_bw()
     })
+    
+    output$click_scatter <- renderPrint({
+      #nearPoints(dynamicdf, input$plot_click, addDist = TRUE)
+      input$plot_click
+    })  
+    
+    
+    # output$plot1 <- renderPlot({
+    #   ggplot(scotcouncil@data, aes(x=dynamicValue, y=dynamicFilterValue,label=scotcouncil$areaname.x.x)) + geom_point(shape=21, size=6, color="blue",fill="red", alpha=0.3) + stat_smooth(method = "lm", col = "red") + labs(x=legendtitle, y=axistitle) + theme_bw() 
+    # })
     
     observe({
       click<-input$map_shape_click
       if(is.null(click))
         return()
+      
+      
       
       available <- combdata[ which(combdata$areacode == click$id), ]
       
@@ -386,7 +413,6 @@ server <- (function(input, output, session) {
       areastatboxraw <- urlddata[ which(urlddata[1] == click$id), ]
       areastatbox <- (areastatboxraw)
       output$areastats <- DT::renderDataTable(datatable(areastatbox, escape = FALSE))
-      
       
       #Build the area stat box
       statboxtext <- paste0("<table id='statbox'><tr><td>Council area: </td><td class='boldtabletext'>", 
@@ -406,23 +432,18 @@ server <- (function(input, output, session) {
       })
       
       
-      scatterpoint <- scotcouncil@data[ which(scotcouncil$CODE == click$id), ]
+      scatterpoint <- dynamicdf[ which(dynamicdf$CODE == click$id), ]
       
-      #Colour the scatterplot according the are of the map clicked
+      #Colour the scatterplot according the area of the map clicked
       output$plot1 <- renderPlot({
-        ggplot() + geom_point(data=scotcouncil@data, aes(x=dynamicValue, y=dynamicFilterValue), shape=21, size=6, color="blue", fill="red", alpha=0.3) + geom_point(data=scatterpoint, aes(x=scatterpoint[dv2], y=scatterpoint[dfv2]), shape=21, size=6, color="blue",fill="purple", alpha=0.8) + stat_smooth(data=scotcouncil@data, aes(x=dynamicValue, y=dynamicFilterValue),method = "lm", col = "red") + labs(x=legendtitle, y=axistitle) + theme_bw() 
+        ggplot() + geom_point(data=dynamicdf, aes(x=dynamicdf[3], y=dynamicdf[4],label=dynamicdf[1]), shape=21, size=6, color="blue", fill="red", alpha=0.3) + geom_point(data=scatterpoint, aes(x=scatterpoint[3], y=scatterpoint[4]), shape=21, size=6, color="blue",fill="purple", alpha=0.8) + stat_smooth(data=dynamicdf, aes(x=dynamicdf[3], y=dynamicdf[4]),method = "lm", col = "red") + labs(x=legendtitle, y=axistitle) + theme_bw() 
       })
+      
+      
     })
     
+    
+    
   })
-  
-  observe({
-    input$reset_button
-    leafletProxy("map") %>% setView(lat = lat, lng = lng, zoom = zoom)
-  })
-  
-  
-  
-  
   
 })
